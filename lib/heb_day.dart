@@ -3,16 +3,15 @@ import 'package:kosher_dart/kosher_dart.dart';
 // import 'package:device_calendar/device_calendar.dart';
 import 'local_events.dart';
 
-Color? _getBgColor(JewishCalendar day, bool isSelected, bool isToday) {
-  if (isSelected) return Colors.blue.shade300;
+Color? _getBgColor(JewishCalendar day, bool isToday) {
   if (isToday) return Colors.blue.shade100;
-  if (day.isYomTovAssurBemelacha()) return Colors.yellow;
-  if (day.getDayOfWeek() == 7) return Colors.orange;
+  if (day.isYomTovAssurBemelacha()) return Colors.yellow.shade200;
+  if (day.getDayOfWeek() == 7) return Colors.orange.shade200;
   if (day.isCholHamoed() ||
       day.getYomTovIndex() == JewishCalendar.HOSHANA_RABBA) {
-    return Colors.yellow.shade600;
+    return Colors.yellow.shade100;
   }
-  if (day.isTaanis()) return Colors.deepOrange.shade200;
+  if (day.isTaanis()) return Colors.deepOrange.shade100;
   return null;
 }
 
@@ -38,11 +37,70 @@ class JewishDayCell extends StatefulWidget {
 class _JewishDayCell extends State<JewishDayCell> {
   final formatter = HebrewDateFormatter()..hebrewFormat = true;
   JewishCalendar get day => widget.day;
-  Color? get bgColor => _getBgColor(day, widget.isSelected, widget.isToday);
+  Color? get bgColor => _getBgColor(day, widget.isToday);
   String get hebDay =>
       formatter.formatHebrewNumber(widget.day.getJewishDayOfMonth());
 
   final textStyle = const TextStyle(fontSize: 7);
+  final maxWidgets = 5;
+
+  Widget _eventBox(String title, Color color) => Container(
+      padding: const EdgeInsets.all(1.0),
+      color: color,
+      child: Text(
+        title,
+        style: textStyle,
+        textAlign: TextAlign.center,
+        softWrap: false,
+        overflow: TextOverflow.ellipsis,
+      ));
+
+  List<Widget> _getWidgets() {
+    return [
+      if (widget.day.isYomTov() || widget.day.isTaanis())
+        Text(
+          formatter.formatYomTov(widget.day),
+          style: textStyle,
+          textAlign: TextAlign.center,
+        ),
+      if (widget.day.isRoshChodesh())
+        Text(
+          formatter.formatRoshChodesh(widget.day),
+          style: textStyle,
+          textAlign: TextAlign.center,
+        ),
+      if (widget.day.getParshah() != Parsha.NONE)
+        Text(
+          formatter.formatParsha(widget.day),
+          style: textStyle,
+          textAlign: TextAlign.center,
+        ),
+      if (widget.day.getSpecialShabbos() != Parsha.NONE)
+        Text(
+          formatter.formatSpecialParsha(widget.day),
+          style: textStyle,
+          textAlign: TextAlign.center,
+        ),
+      ...widget.events
+          .map((e) => _eventBox(e.event.title ?? "Untitled event", e.color))
+    ];
+  }
+
+  List<Widget> _truncateWidgets(List<Widget> widgets) {
+    if (widgets.length <= maxWidgets) return widgets;
+    final numWidgetsToKeep = maxWidgets - 1;
+    final numWidgetsRemoved = widgets.length - numWidgetsToKeep;
+    return [
+      ...widgets.take(numWidgetsToKeep),
+      _eventBox('+$numWidgetsRemoved more events', Colors.blue.shade200)
+    ];
+  }
+
+  Border _getBorder() {
+    return widget.isSelected
+        ? Border.all(color: Colors.blue.shade400, width: 1.5)
+        : Border.all(color: Colors.black26, width: 0.5);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,16 +111,11 @@ class _JewishDayCell extends State<JewishDayCell> {
         child: Container(
           decoration: BoxDecoration(
             color: bgColor,
-            border: const Border(
-              top: BorderSide.none,
-              left: BorderSide.none,
-              right: BorderSide(color: Colors.black26),
-              bottom: BorderSide(color: Colors.black26),
-            ),
+            // border: _getBorder(),
           ),
           foregroundDecoration: widget.isInCurrentMonth
-              ? null
-              : const BoxDecoration(color: Colors.white60),
+              ? BoxDecoration(border: _getBorder())
+              : BoxDecoration(color: Colors.white60, border: _getBorder()),
           padding: const EdgeInsets.all(2.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
@@ -83,42 +136,7 @@ class _JewishDayCell extends State<JewishDayCell> {
               Expanded(
                   child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (widget.day.isYomTov() || widget.day.isTaanis())
-                    Text(
-                      formatter.formatYomTov(widget.day),
-                      style: textStyle,
-                      textAlign: TextAlign.center,
-                    ),
-                  if (widget.day.isRoshChodesh())
-                    Text(
-                      formatter.formatRoshChodesh(widget.day),
-                      style: textStyle,
-                      textAlign: TextAlign.center,
-                    ),
-                  if (widget.day.getParshah() != Parsha.NONE)
-                    Text(
-                      formatter.formatParsha(widget.day),
-                      style: textStyle,
-                      textAlign: TextAlign.center,
-                    ),
-                  if (widget.day.getSpecialShabbos() != Parsha.NONE)
-                    Text(
-                      formatter.formatSpecialParsha(widget.day),
-                      style: textStyle,
-                      textAlign: TextAlign.center,
-                    ),
-                  ...widget.events.map((e) => Container(
-                      padding: const EdgeInsets.all(1.0),
-                      color: e.color,
-                      child: Text(
-                        e.event.title ?? "Untitled event",
-                        style: textStyle,
-                        textAlign: TextAlign.center,
-                        softWrap: false,
-                        overflow: TextOverflow.ellipsis,
-                      )))
-                ],
+                children: _truncateWidgets(_getWidgets()),
               )),
             ],
           ),

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:hebrew_calendar/settings.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:kosher_dart/kosher_dart.dart';
+import 'package:month_year_picker/month_year_picker.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'heb_day.dart';
 import 'zmanim.dart';
@@ -47,6 +50,12 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
+      localizationsDelegates: const [
+        MonthYearPickerLocalizations.delegate,
+        // ... app-specific localization delegate[s] here
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ],
       home: const MyHomePage(title: 'Hebrew Calendar'),
     );
   }
@@ -99,30 +108,15 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  Future<void> _selectMonthYear() async {
-    final selectedDate = await showDialog<DateTime?>(
-        context: context,
-        builder: (BuildContext context) {
-          return SimpleDialog(
-            title: const Text('Select assignment'),
-            children: <Widget>[
-              SimpleDialogOption(
-                onPressed: () {
-                  Navigator.pop(context,
-                      DateTime.now().subtract(const Duration(days: 365)));
-                },
-                child: const Text('go to last year'),
-              ),
-              SimpleDialogOption(
-                onPressed: () {
-                  Navigator.pop(
-                      context, DateTime.now().add(const Duration(days: 365)));
-                },
-                child: const Text('go to next year'),
-              ),
-            ],
-          );
-        });
+  void _selectMonthYear() async {
+    Navigator.of(context).pop();
+    final selectedDate = await showMonthYearPicker(
+      context: context,
+      initialDate: _selectedDay,
+      firstDate: DateTime(1900),
+      lastDate: DateTime(2300),
+    );
+    if (!mounted) return;
     if (selectedDate != null) {
       setState(() {
         _selectedDay = selectedDate;
@@ -203,6 +197,38 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  void _goToSettingsPage() async {
+    await Navigator.of(context)
+        .push(MaterialPageRoute(builder: (context) => const SettingsPage()));
+    if (!mounted) return;
+    Navigator.pop(context);
+    setState(() {
+      _cachedMonthEvents = MonthEvents(DateTime(1300), {});
+    });
+  }
+
+  Widget _getDrawer() {
+    return Drawer(
+        child: ListView(
+      children: [
+        const DrawerHeader(
+          decoration: BoxDecoration(
+            color: Colors.blue,
+          ),
+          child: Text('Hebrew Calendar'),
+        ),
+        ListTile(
+          title: const Text("Go to month"),
+          onTap: _selectMonthYear,
+        ),
+        ListTile(
+          title: const Text("Settings"),
+          onTap: _goToSettingsPage,
+        )
+      ],
+    ));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -211,14 +237,15 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(_getMonthsTitle(_selectedDay)),
         titleTextStyle: const TextStyle(fontSize: 12),
         actions: [
-          IconButton(
-              onPressed: () => _selectMonthYear(),
-              icon: const Icon(Icons.menu)),
+          // IconButton(
+          //     onPressed: () => _selectMonthYear(),
+          //     icon: const Icon(Icons.menu)),
           IconButton(
               onPressed: () => _updateCurrentDay(DateTime.now()),
               icon: const Icon(Icons.calendar_today))
         ],
       ),
+      drawer: _getDrawer(),
       body: FutureBuilder<MonthEvents>(
           future: _monthEvents(),
           builder: (BuildContext context,
@@ -232,7 +259,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     lastDay: _lastDay,
                     onDaySelected: _setCurrentDay,
                     onPageChanged: _updateCurrentDay,
-                    rowHeight: 80,
+                    rowHeight: 74,
                     availableCalendarFormats: const {
                       CalendarFormat.month: 'Month'
                     },
@@ -282,20 +309,23 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                   Expanded(
                     child: Column(children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            DateFormat.yMMMMd().format(_selectedDay),
-                            style: const TextStyle(color: Colors.green),
-                          ),
-                          Text(
-                            formatter.format(
-                                JewishCalendar.fromDateTime(_selectedDay)),
-                            style: const TextStyle(color: Colors.green),
-                          )
-                        ],
-                      ),
+                      Container(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 6, horizontal: 12),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                DateFormat.yMMMMd().format(_selectedDay),
+                                style: const TextStyle(fontSize: 14),
+                              ),
+                              Text(
+                                formatter.format(
+                                    JewishCalendar.fromDateTime(_selectedDay)),
+                                style: const TextStyle(fontSize: 14),
+                              )
+                            ],
+                          )),
                       Expanded(
                           child: SingleChildScrollView(
                               child: Column(

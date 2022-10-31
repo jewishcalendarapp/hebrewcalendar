@@ -2,11 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:kosher_dart/kosher_dart.dart';
 
+// Used for netz and shkia
+const normalOffset = 90.0 + 0.833;
+
+// used for shaa zmanis calculations
+const amitisOffset = 90.0 + 1.583;
+
+// Calculates from netz amitis to shkia amitis
+DateTime? _getTimeFromShaaZmanis(ZmanimCalendar zmanim, double hours) {
+  final sunrise = zmanim.getSunriseOffsetByDegrees(amitisOffset);
+  final sunset = zmanim.getSunsetOffsetByDegrees(amitisOffset);
+  if (sunrise == null || sunset == null) return null;
+  return zmanim.getShaahZmanisBasedZman(sunrise, sunset, hours);
+}
+
 enum ZmanType {
   alos19point9,
   sunrise,
   kriasShmaRav,
   chatzos,
+  minchaGedola,
   earlyCandleLighting,
   sunset,
   lateCandleLighting,
@@ -26,15 +41,21 @@ Zman? _zmanTypeToZman(ZmanType type, JewishCalendar day, ZmanimCalendar zmanim,
     DateFormat formatter) {
   switch (type) {
     case ZmanType.alos19point9:
-      final time = zmanim
-          .getSunriseOffsetByDegrees(ZmanimCalendar.ZENITH_16_POINT_1 + .8);
+      final time = zmanim.getSunriseOffsetByDegrees(
+              ZmanimCalendar.ZENITH_16_POINT_1 + .8) ??
+          zmanim.getChatzos();
       return Zman(_alosText(day), time, formatter);
     case ZmanType.sunrise:
-      return Zman("Sunrise", zmanim.getSeaLevelSunrise(), formatter);
+      return Zman("Sunrise",
+          _roundUp(zmanim.getSunriseOffsetByDegrees(normalOffset)), formatter);
     case ZmanType.kriasShmaRav:
-      return Zman("Sof Zman Krias Shma", zmanim.getSofZmanShmaGRA(), formatter);
+      return Zman(
+          "Sof Zman Krias Shma", _getTimeFromShaaZmanis(zmanim, 3), formatter);
     case ZmanType.chatzos:
       return Zman("Chatzos", zmanim.getChatzos(), formatter);
+    case ZmanType.minchaGedola:
+      return Zman("Earliest Mincha",
+          _roundUp(_getTimeFromShaaZmanis(zmanim, 6.5)), formatter);
     case ZmanType.earlyCandleLighting:
       if (_earlyCandleLighting(day)) {
         return Zman("Candle Lighting", zmanim.getCandleLighting(), formatter);
@@ -50,11 +71,9 @@ Zman? _zmanTypeToZman(ZmanType type, JewishCalendar day, ZmanimCalendar zmanim,
       return null;
     case ZmanType.tzeis6:
       if (day.getDayOfWeek() == 7 || day.isYomTovAssurBemelacha()) return null;
-      return Zman(
-          _endText(day),
-          _roundUp(zmanim
-              .getSunsetOffsetByDegrees(ZmanimCalendar.ZENITH_8_POINT_5 - 2.5)),
-          formatter);
+      const tzeis6Offset = ZmanimCalendar.ZENITH_8_POINT_5 - 2.5;
+      return Zman(_endText(day),
+          _roundUp(zmanim.getSunsetOffsetByDegrees(tzeis6Offset)), formatter);
     case ZmanType.tzeis8point5:
       if (day.getDayOfWeek() == 7 || day.isYomTovAssurBemelacha()) {
         return Zman(_endText(day), _roundUp(zmanim.getTzais()), formatter);

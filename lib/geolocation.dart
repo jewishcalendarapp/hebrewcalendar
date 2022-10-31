@@ -49,8 +49,8 @@ Future<GeoLocation> determinePosition() async {
   final locationTitle = location != null
       ? "${location.cityName}, ${location.adminName}"
       : "Current Location - Lat: ${position.latitude.toStringAsFixed(4)}, Lon: ${position.longitude.toStringAsFixed(4)}";
-  return GeoLocation.setLocation(locationTitle, position.latitude,
-      position.longitude, DateTime.now(), max(0, position.altitude));
+  return GeoLocation.setLocation(
+      locationTitle, position.latitude, position.longitude, DateTime.now());
 }
 
 Future<void> _copyDB(String path) async {

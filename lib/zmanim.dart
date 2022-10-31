@@ -9,6 +9,7 @@ final types = [
   ZmanType.sunrise,
   ZmanType.kriasShmaRav,
   ZmanType.chatzos,
+  ZmanType.minchaGedola,
   ZmanType.earlyCandleLighting,
   ZmanType.sunset,
   ZmanType.lateCandleLighting,

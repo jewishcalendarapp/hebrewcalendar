@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:device_calendar/device_calendar.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'utils.dart';
 
@@ -24,6 +25,8 @@ Future<bool> _getCalendarPermissions() async {
       if (!permissionsGranted.isSuccess ||
           permissionsGranted.data == null ||
           permissionsGranted.data == false) {
+        final prefs = await SharedPreferences.getInstance();
+        prefs.setBool('disableCalendar', true);
         return false;
       }
     }
@@ -53,6 +56,11 @@ class MonthEvents {
 String _dateKey(DateTime day) => '${day.month}_${day.day}';
 
 Future<MonthEvents> getEvents(DateTime day) async {
+  final prefs = await SharedPreferences.getInstance();
+  final disableCalendar = prefs.getBool('disableCalendar') ?? false;
+  if (disableCalendar) {
+    return MonthEvents(day, {});
+  }
   final hasPermission = await _getCalendarPermissions();
   if (!hasPermission) {
     return MonthEvents(day, {});
@@ -67,8 +75,10 @@ Future<MonthEvents> getEvents(DateTime day) async {
   final plugin = DeviceCalendarPlugin();
   final calendars = await plugin.retrieveCalendars();
   if (calendars.isSuccess) {
-    final calendarEvents = await Future.wait(calendars.data!.map((e) =>
-        plugin.retrieveEvents(
+    final hiddenCals = prefs.getStringList('hiddenCalendars') ?? [];
+    final calendarEvents = await Future.wait(calendars.data!
+        .where((cal) => !hiddenCals.contains(cal.id ?? ''))
+        .map((e) => plugin.retrieveEvents(
             e.id,
             RetrieveEventsParams(
                 startDate: firstDayInCalendar, endDate: lastDayInCalendar))));
