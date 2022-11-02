@@ -8,7 +8,7 @@
 PRODUCT_NAME = hebrew_calendar
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.example.hebrewCalendar
+PRODUCT_BUNDLE_IDENTIFIER = com.jewish_calendar.hebrewCalendar
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2022 com.example. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2022 com.jewish_calendar. All rights reserved.
