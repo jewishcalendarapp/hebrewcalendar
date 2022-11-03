@@ -199,9 +199,11 @@ packages:
   month_year_picker:
     dependency: "direct main"
     description:
-      name: month_year_picker
-      url: "https://pub.dartlang.org"
-    source: hosted
+      path: "."
+      ref: "6e85bc70e9ca53a66850790f9a261f192c5bb9eb"
+      resolved-ref: "6e85bc70e9ca53a66850790f9a261f192c5bb9eb"
+      url: "https://github.com/jewishcalendarapp/month-year-picker.git"
+    source: git
     version: "0.2.0+3"
   path:
     dependency: "direct main"

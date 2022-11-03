@@ -48,7 +48,10 @@ dependencies:
   sqlite3_flutter_libs: ^0.5.10
   device_calendar: ^4.2.0
   shared_preferences: ^2.0.15
-  month_year_picker: ^0.2.0+3
+  month_year_picker:
+    git:
+      url: https://github.com/jewishcalendarapp/month-year-picker.git
+      ref: 6e85bc70e9ca53a66850790f9a261f192c5bb9eb
 
 dev_dependencies:
   flutter_test:

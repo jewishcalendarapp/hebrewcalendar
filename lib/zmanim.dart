@@ -38,19 +38,18 @@ class _ZmanimBox extends State<ZmanimBox> {
   @override
   Widget build(BuildContext context) {
     final zmanim = widget.zmanim;
+    if (zmanim == null) return Container();
     return Container(
       padding: const EdgeInsets.all(4.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (zmanim != null)
-            Text("Times are for ${zmanim.geoLocation.getLocationName()} "
-                "Timezone: $timeZoneName"),
-          if (zmanim != null)
-            ...getZmanim(types, day, zmanim, timeFormatter)
-                .map((e) => e.toWidget())
-                .toList()
+          Text("Times are for ${zmanim.geoLocation.getLocationName()}"),
+          Text("Timezone: $timeZoneName"),
+          ...getZmanim(types, day, zmanim, timeFormatter)
+              .map((e) => e.toWidget())
+              .toList()
         ],
       ),
     );

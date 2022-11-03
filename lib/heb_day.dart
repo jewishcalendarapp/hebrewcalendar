@@ -4,14 +4,16 @@ import 'package:kosher_dart/kosher_dart.dart';
 import 'local_events.dart';
 
 Color? _getBgColor(JewishCalendar day, bool isToday) {
-  if (isToday) return Colors.blue.shade100;
-  if (day.isYomTovAssurBemelacha()) return Colors.yellow.shade200;
-  if (day.getDayOfWeek() == 7) return Colors.orange.shade200;
+  if (isToday) return Colors.orange.shade50;
+  if (day.getDayOfWeek() == 7 || day.isYomTovAssurBemelacha()) {
+    return Colors.blue.shade100;
+  }
   if (day.isCholHamoed() ||
       day.getYomTovIndex() == JewishCalendar.HOSHANA_RABBA) {
-    return Colors.yellow.shade100;
+    return Colors.blue.shade50;
   }
-  if (day.isTaanis()) return Colors.deepOrange.shade100;
+  if (day.isYomTov() && !day.isErevYomTov()) return Colors.yellow.shade50;
+  if (day.isTaanis()) return Colors.deepOrange.shade50;
   return null;
 }
 

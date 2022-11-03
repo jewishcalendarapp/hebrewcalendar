@@ -167,6 +167,8 @@ class _MyHomePageState extends State<MyHomePage> {
           ? Column(
               children: events
                   .map((e) => Container(
+                        margin: const EdgeInsets.all(4.0),
+                        padding: const EdgeInsets.all(4.0),
                         color: e.color,
                         child: Text(
                           e.event.title ?? "unnamed event",

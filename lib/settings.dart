@@ -81,7 +81,7 @@ class _SettingsPage extends State<SettingsPage> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: const Text("settings"),
+        title: const Text("Settings"),
         titleTextStyle: const TextStyle(fontSize: 12),
       ),
       body: Container(
@@ -90,7 +90,6 @@ class _SettingsPage extends State<SettingsPage> {
             mainAxisAlignment: MainAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text("Test settings page"),
               FutureBuilder(
                   future: _getSettings(),
                   builder: (context, snapshot) {
