@@ -52,6 +52,7 @@ dependencies:
     git:
       url: https://github.com/jewishcalendarapp/month-year-picker.git
       ref: 6e85bc70e9ca53a66850790f9a261f192c5bb9eb
+  url_launcher: ^6.1.6
 
 dev_dependencies:
   flutter_test:

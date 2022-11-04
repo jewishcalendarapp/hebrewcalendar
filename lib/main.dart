@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hebrew_calendar/about_page.dart';
 import 'package:hebrew_calendar/settings.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -229,6 +230,15 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  void _goToAboutPage() async {
+    await Navigator.of(context)
+        .push(MaterialPageRoute(builder: (context) => const AboutPage()));
+    if (!mounted) return;
+    if (Navigator.of(context).canPop()) {
+      Navigator.pop(context);
+    }
+  }
+
   Widget _getDrawer() {
     return Drawer(
         child: ListView(
@@ -246,6 +256,10 @@ class _MyHomePageState extends State<MyHomePage> {
         ListTile(
           title: const Text("Settings"),
           onTap: _goToSettingsPage,
+        ),
+        ListTile(
+          title: const Text("About"),
+          onTap: _goToAboutPage,
         )
       ],
     ));
