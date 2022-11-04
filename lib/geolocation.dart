@@ -7,13 +7,19 @@ import 'package:geolocator/geolocator.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqlite3/sqlite3.dart';
 import 'package:kosher_dart/kosher_dart.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-Future<GeoLocation> determinePosition() async {
-  bool serviceEnabled;
-  LocationPermission permission;
+const disableLocationKey = 'locationDisabled';
+
+Future<void> getLocationPermission() async {
+  final prefs = await SharedPreferences.getInstance();
+  final isLocationDisabled = prefs.getBool(disableLocationKey) ?? false;
+  if (isLocationDisabled) {
+    return Future.error('Location is disabled. Go to app settings to change.');
+  }
 
   // Test if location services are enabled.
-  serviceEnabled = await Geolocator.isLocationServiceEnabled();
+  final serviceEnabled = await Geolocator.isLocationServiceEnabled();
 
   if (!serviceEnabled) {
     // Location services are not enabled don't continue
@@ -22,10 +28,11 @@ Future<GeoLocation> determinePosition() async {
     return Future.error('Location services are disabled.');
   }
 
-  permission = await Geolocator.checkPermission();
+  var permission = await Geolocator.checkPermission();
   if (permission == LocationPermission.denied) {
     permission = await Geolocator.requestPermission();
     if (permission == LocationPermission.denied) {
+      prefs.setBool(disableLocationKey, true);
       // Permissions are denied, next time you could try
       // requesting permissions again (this is also where
       // Android's shouldShowRequestPermissionRationale
@@ -39,6 +46,14 @@ Future<GeoLocation> determinePosition() async {
     // Permissions are denied forever, handle appropriately.
     return Future.error(
         'Location permissions are permanently denied, we cannot request permissions.');
+  }
+}
+
+Future<GeoLocation> determinePosition() async {
+  try {
+    await getLocationPermission();
+  } catch (e) {
+    return Future.error(e);
   }
   await _makeSureDBExists();
 

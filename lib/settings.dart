@@ -3,6 +3,7 @@ import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:device_calendar/device_calendar.dart';
+import 'geolocation.dart';
 
 class _CalendarWithState {
   final Calendar calendar;
@@ -11,9 +12,10 @@ class _CalendarWithState {
 }
 
 class _Settings {
+  final bool disableLocation;
   final bool disableCalendar;
   final List<_CalendarWithState> calendars;
-  _Settings(this.disableCalendar, this.calendars);
+  _Settings(this.disableLocation, this.disableCalendar, this.calendars);
 }
 
 class SettingsPage extends StatefulWidget {
@@ -29,10 +31,11 @@ class _SettingsPage extends State<SettingsPage> {
   Result<UnmodifiableListView<Calendar>>? _calendars;
 
   Future<_Settings> _getSettings() async {
+    final disableLocation = (await _prefs).getBool(disableLocationKey) ?? false;
     final disableCalendar = (await _prefs).getBool('disableCalendar') ?? false;
     final calendars =
         disableCalendar ? <_CalendarWithState>[] : await _getCalendars();
-    return _Settings(disableCalendar, calendars);
+    return _Settings(disableLocation, disableCalendar, calendars);
   }
 
   Future<List<_CalendarWithState>> _getCalendars() async {
@@ -46,6 +49,19 @@ class _SettingsPage extends State<SettingsPage> {
           .toList();
     }
     return [];
+  }
+
+  void _toggleLocation(bool? enable) async {
+    if (enable == null) return;
+    final prefs = await _prefs;
+    if (enable) {
+      await prefs.remove(disableLocationKey);
+      getLocationPermission();
+    } else {
+      await prefs.setBool(disableLocationKey, true);
+    }
+    if (!mounted) return;
+    setState(() {});
   }
 
   void _toggleCalendars(bool? enable) async {
@@ -104,10 +120,19 @@ class _SettingsPage extends State<SettingsPage> {
                         child: ListView(
                       children: [
                         CheckboxListTile(
+                          value: !settings.disableLocation,
+                          title: const Text("Enable Location"),
+                          onChanged: _toggleLocation,
+                        ),
+                        CheckboxListTile(
                           value: !settings.disableCalendar,
                           title: const Text("Enable Calendars"),
                           onChanged: _toggleCalendars,
                         ),
+                        if (settings.calendars.isNotEmpty)
+                          const ListTile(
+                            title: Text('Calendars to show:'),
+                          ),
                         ...settings.calendars.map((cal) => CheckboxListTile(
                               value: cal.visible,
                               title:

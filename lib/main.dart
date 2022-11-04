@@ -91,9 +91,13 @@ class _MyHomePageState extends State<MyHomePage> {
   GeoLocation? _cachedGeoLocation;
   Future<GeoLocation> _geoLocation() async {
     if (_cachedGeoLocation != null) return _cachedGeoLocation!;
-    final location = await determinePosition();
-    _cachedGeoLocation = location;
-    return location;
+    try {
+      final location = await determinePosition();
+      _cachedGeoLocation = location;
+      return location;
+    } catch (e) {
+      return Future.error(e);
+    }
   }
 
   void _setCurrentDay(DateTime selectedDay, DateTime focusedDay) {
@@ -139,7 +143,20 @@ class _MyHomePageState extends State<MyHomePage> {
               day: JewishCalendar.fromDateTime(_selectedDay),
               zmanim: ZmanimCalendar.intGeolocation(snapshot.data!)
                 ..setCalendar(_selectedDay))
-          : Text('Error getting location for zmanim: ${snapshot.error}'),
+          : Container(
+              padding: const EdgeInsets.all(15.0),
+              child: Column(
+                children: [
+                  const Text('Error getting location for zmanim:'),
+                  Text('${snapshot.error}'),
+                  MaterialButton(
+                    color: Colors.blue,
+                    textColor: Colors.white,
+                    onPressed: _goToSettingsPage,
+                    child: const Text('Open settings'),
+                  )
+                ],
+              )),
       isExpanded:
           (snapshot.hasData || snapshot.hasError) ? _zmanimExpanded : false,
     );
@@ -203,8 +220,11 @@ class _MyHomePageState extends State<MyHomePage> {
     await Navigator.of(context)
         .push(MaterialPageRoute(builder: (context) => const SettingsPage()));
     if (!mounted) return;
-    Navigator.pop(context);
+    if (Navigator.of(context).canPop()) {
+      Navigator.pop(context);
+    }
     setState(() {
+      _cachedGeoLocation = null;
       _cachedMonthEvents = MonthEvents(DateTime(1300), {});
     });
   }
