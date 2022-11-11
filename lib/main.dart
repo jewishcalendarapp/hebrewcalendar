@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:hebrew_calendar/about_page.dart';
 import 'package:hebrew_calendar/settings.dart';
@@ -265,6 +267,120 @@ class _MyHomePageState extends State<MyHomePage> {
     ));
   }
 
+  Container _createCalendar(MonthEvents? events, double height, double width) {
+    const daysOfWeekHeight = 16.0;
+    final weeksInMonth = getWeeksInMonth(_selectedDay);
+    final rowHeight = min(74.0, (height - daysOfWeekHeight) / weeksInMonth);
+    // JewishCalendar.fromDateTime(_selectedDay).
+    return Container(
+      constraints: width > height
+          ? BoxConstraints(
+              maxHeight: height,
+              minHeight: height,
+              maxWidth: width,
+              minWidth: width)
+          : null,
+      child: TableCalendar(
+        focusedDay: _selectedDay,
+        firstDay: _firstDay,
+        lastDay: _lastDay,
+        onDaySelected: _setCurrentDay,
+        onPageChanged: _updateCurrentDay,
+        rowHeight: rowHeight,
+        daysOfWeekHeight: daysOfWeekHeight,
+        availableCalendarFormats: const {CalendarFormat.month: 'Month'},
+        headerVisible: false,
+        calendarBuilders: CalendarBuilders(
+          dowBuilder: (context, day) {
+            if (day.weekday == DateTime.saturday) {
+              const text = "Sha";
+
+              return const Center(
+                child: Text(
+                  text,
+                  style: TextStyle(color: Colors.red),
+                ),
+              );
+            }
+            return null;
+          },
+          todayBuilder: (context, day, focusedDay) {
+            return JewishDayCell(
+              day: JewishCalendar.fromDateTime(day),
+              events: events?.getEvents(day) ?? [],
+              isToday: true,
+              isInCurrentMonth: day.month == focusedDay.month,
+              isSelected: day == focusedDay,
+              height: rowHeight,
+            );
+          },
+          defaultBuilder: (context, day, focusedDay) {
+            return JewishDayCell(
+              day: JewishCalendar.fromDateTime(day),
+              events: events?.getEvents(day) ?? [],
+              isToday: false,
+              isInCurrentMonth: true,
+              isSelected: day == focusedDay,
+              height: rowHeight,
+            );
+          },
+          outsideBuilder: (context, day, focusedDay) {
+            return JewishDayCell(
+              day: JewishCalendar.fromDateTime(day),
+              events: events?.getEvents(day) ?? [],
+              isToday: false,
+              isInCurrentMonth: false,
+              isSelected: day == focusedDay,
+              height: rowHeight,
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Container _dayDetail(AsyncSnapshot<MonthEvents> eventsSnapshot) {
+    return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+        child: Column(children: [
+          Container(
+              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+              child: Row(children: [
+                Expanded(
+                    child: Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  runAlignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  direction: Axis.horizontal,
+                  children: [
+                    Text(
+                      DateFormat.yMMMMd().format(_selectedDay),
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                    Text(
+                      formatter
+                          .format(JewishCalendar.fromDateTime(_selectedDay)),
+                      style: const TextStyle(fontSize: 14),
+                    )
+                  ],
+                ))
+              ])),
+          Expanded(
+              child: SingleChildScrollView(
+                  child: Column(
+            children: [
+              FutureBuilder<GeoLocation>(
+                future: _geoLocation(),
+                builder: (BuildContext context,
+                    AsyncSnapshot<GeoLocation> geoSnapshot) {
+                  return _buildExpansionPanelList(geoSnapshot, eventsSnapshot);
+                },
+              ),
+            ],
+          )))
+        ]));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -273,113 +389,41 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(_getMonthsTitle(_selectedDay)),
         titleTextStyle: const TextStyle(fontSize: 12),
         actions: [
-          // IconButton(
-          //     onPressed: () => _selectMonthYear(),
-          //     icon: const Icon(Icons.menu)),
           IconButton(
               onPressed: () => _updateCurrentDay(DateTime.now()),
               icon: const Icon(Icons.calendar_today))
         ],
       ),
       drawer: _getDrawer(),
-      body: FutureBuilder<MonthEvents>(
+      body: LayoutBuilder(builder: (context, constraints) {
+        final height = constraints.biggest.height;
+        final width = constraints.biggest.width;
+        final orientation =
+            width > height ? Orientation.landscape : Orientation.portrait;
+        return FutureBuilder<MonthEvents>(
           future: _monthEvents(),
           builder: (BuildContext context,
                   AsyncSnapshot<MonthEvents> eventsSnapshot) =>
-              Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: <Widget>[
-                  TableCalendar(
-                    focusedDay: _selectedDay,
-                    firstDay: _firstDay,
-                    lastDay: _lastDay,
-                    onDaySelected: _setCurrentDay,
-                    onPageChanged: _updateCurrentDay,
-                    rowHeight: 74,
-                    availableCalendarFormats: const {
-                      CalendarFormat.month: 'Month'
-                    },
-                    headerVisible: false,
-                    calendarBuilders: CalendarBuilders(
-                      dowBuilder: (context, day) {
-                        if (day.weekday == DateTime.saturday) {
-                          const text = "Sha";
-
-                          return const Center(
-                            child: Text(
-                              text,
-                              style: TextStyle(color: Colors.red),
-                            ),
-                          );
-                        }
-                        return null;
-                      },
-                      todayBuilder: (context, day, focusedDay) {
-                        return JewishDayCell(
-                          day: JewishCalendar.fromDateTime(day),
-                          events: eventsSnapshot.data?.getEvents(day) ?? [],
-                          isToday: true,
-                          isInCurrentMonth: day.month == focusedDay.month,
-                          isSelected: day == focusedDay,
-                        );
-                      },
-                      defaultBuilder: (context, day, focusedDay) {
-                        return JewishDayCell(
-                          day: JewishCalendar.fromDateTime(day),
-                          events: eventsSnapshot.data?.getEvents(day) ?? [],
-                          isToday: false,
-                          isInCurrentMonth: true,
-                          isSelected: day == focusedDay,
-                        );
-                      },
-                      outsideBuilder: (context, day, focusedDay) {
-                        return JewishDayCell(
-                          day: JewishCalendar.fromDateTime(day),
-                          events: eventsSnapshot.data?.getEvents(day) ?? [],
-                          isToday: false,
-                          isInCurrentMonth: false,
-                          isSelected: day == focusedDay,
-                        );
-                      },
-                    ),
-                  ),
-                  Expanded(
-                    child: Column(children: [
-                      Container(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 6, horizontal: 12),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                DateFormat.yMMMMd().format(_selectedDay),
-                                style: const TextStyle(fontSize: 14),
-                              ),
-                              Text(
-                                formatter.format(
-                                    JewishCalendar.fromDateTime(_selectedDay)),
-                                style: const TextStyle(fontSize: 14),
-                              )
-                            ],
-                          )),
+              orientation == Orientation.portrait
+                  ? Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: <Widget>[
+                        _createCalendar(eventsSnapshot.data, height, width),
+                        Expanded(
+                          child: _dayDetail(eventsSnapshot),
+                        ),
+                      ],
+                    )
+                  : Row(children: <Widget>[
+                      _createCalendar(eventsSnapshot.data, height, width - 250),
                       Expanded(
-                          child: SingleChildScrollView(
-                              child: Column(
-                        children: [
-                          FutureBuilder<GeoLocation>(
-                            future: _geoLocation(),
-                            builder: (BuildContext context,
-                                AsyncSnapshot<GeoLocation> geoSnapshot) {
-                              return _buildExpansionPanelList(
-                                  geoSnapshot, eventsSnapshot);
-                            },
-                          ),
-                        ],
-                      )))
+                        child: _dayDetail(eventsSnapshot),
+                      ),
                     ]),
-                  ),
-                ],
-              )),
+        );
+      }),
     );
+    // },
+    // );
   }
 }

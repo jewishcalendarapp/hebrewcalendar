@@ -12,3 +12,10 @@ DateTime getLastDayOfEnglishMonth(DateTime day) {
   final isLeapYear = JewishDate().isGregorianLeapYear(day.year);
   return DateTime(day.year, day.month, _getNumDays(day.month, isLeapYear));
 }
+
+int getWeeksInMonth(DateTime day) {
+  final isLeapYear = JewishDate().isGregorianLeapYear(day.year);
+  final numDays = _getNumDays(day.month, isLeapYear);
+  final dayOfWeek = DateTime(day.year, day.month, 1).weekday % 7; // sunday is 0
+  return ((numDays + dayOfWeek) / 7).ceil();
+}

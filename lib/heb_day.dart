@@ -1,6 +1,7 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:kosher_dart/kosher_dart.dart';
-// import 'package:device_calendar/device_calendar.dart';
 import 'local_events.dart';
 
 Color? _getBgColor(JewishCalendar day, bool isToday) {
@@ -24,17 +25,21 @@ class JewishDayCell extends StatefulWidget {
       required this.events,
       required this.isToday,
       required this.isInCurrentMonth,
-      required this.isSelected});
+      required this.isSelected,
+      required this.height});
 
   final JewishCalendar day;
   final bool isToday;
   final bool isInCurrentMonth;
   final bool isSelected;
   final List<EventsWithColor> events;
+  final double height;
 
   @override
   State<JewishDayCell> createState() => _JewishDayCell();
 }
+
+const padding = 2.0;
 
 class _JewishDayCell extends State<JewishDayCell> {
   final formatter = HebrewDateFormatter()..hebrewFormat = true;
@@ -43,58 +48,82 @@ class _JewishDayCell extends State<JewishDayCell> {
   String get hebDay =>
       formatter.formatHebrewNumber(widget.day.getJewishDayOfMonth());
 
-  final textStyle = const TextStyle(fontSize: 7);
-  final maxWidgets = 5;
+  double get availableSpace {
+    const top = (padding * 2) + 14; // 14 is the height of the day numbers
+    return widget.height - top;
+  }
 
-  Widget _eventBox(String title, Color color) => Container(
+  int get roomForWidgets {
+    return (availableSpace / 10).floor();
+  }
+
+  final minWidgets = 4;
+
+  int get widgetsToShow => max(minWidgets, roomForWidgets);
+
+  Widget _eventBox(String title, Color color, TextStyle style) => Container(
       padding: const EdgeInsets.all(1.0),
       color: color,
       child: Text(
         title,
-        style: textStyle,
+        style: style,
         textAlign: TextAlign.center,
         softWrap: false,
         overflow: TextOverflow.ellipsis,
       ));
 
   List<Widget> _getWidgets() {
-    return [
+    final holidayTexts = [
       if (widget.day.isYomTov() || widget.day.isTaanis())
-        Text(
-          formatter.formatYomTov(widget.day),
-          style: textStyle,
-          textAlign: TextAlign.center,
-        ),
-      if (widget.day.isRoshChodesh())
-        Text(
-          formatter.formatRoshChodesh(widget.day),
-          style: textStyle,
-          textAlign: TextAlign.center,
-        ),
+        formatter.formatYomTov(widget.day),
+      if (widget.day.isRoshChodesh()) formatter.formatRoshChodesh(widget.day),
       if (widget.day.getParshah() != Parsha.NONE)
-        Text(
-          formatter.formatParsha(widget.day),
-          style: textStyle,
-          textAlign: TextAlign.center,
-        ),
+        formatter.formatParsha(widget.day),
       if (widget.day.getSpecialShabbos() != Parsha.NONE)
-        Text(
-          formatter.formatSpecialParsha(widget.day),
-          style: textStyle,
-          textAlign: TextAlign.center,
-        ),
-      ...widget.events
-          .map((e) => _eventBox(e.event.title ?? "Untitled event", e.color))
+        formatter.formatSpecialParsha(widget.day),
+    ];
+    var widgetTextStyle = const TextStyle(fontSize: 7);
+
+    var numWidgetsToShow = holidayTexts.length + widget.events.length;
+
+    if (roomForWidgets < holidayTexts.length + widget.events.length) {
+      // we need to truncate or resize the text
+      final hasEvents = widget.events.isNotEmpty;
+      final absoluteMinWidgets = holidayTexts.length + (hasEvents ? 1 : 0);
+      if (roomForWidgets < absoluteMinWidgets) {
+        // we need to resize font
+        final fontSize =
+            ((availableSpace / absoluteMinWidgets) - 3).floorToDouble();
+        widgetTextStyle = TextStyle(fontSize: fontSize);
+      }
+      numWidgetsToShow = max(absoluteMinWidgets, roomForWidgets);
+    }
+
+    return [
+      ...holidayTexts.map((e) => Text(
+            e,
+            style: widgetTextStyle,
+            textAlign: TextAlign.center,
+          )),
+      ..._truncatedHolidays(
+          widget.events
+              .map((e) => _eventBox(
+                  e.event.title ?? "Untitled event", e.color, widgetTextStyle))
+              .toList(),
+          numWidgetsToShow - holidayTexts.length,
+          widgetTextStyle)
     ];
   }
 
-  List<Widget> _truncateWidgets(List<Widget> widgets) {
-    if (widgets.length <= maxWidgets) return widgets;
-    final numWidgetsToKeep = maxWidgets - 1;
-    final numWidgetsRemoved = widgets.length - numWidgetsToKeep;
+  List<Widget> _truncatedHolidays(
+      List<Widget> holidayWidgets, int space, TextStyle textStyle) {
+    if (holidayWidgets.length <= space) return holidayWidgets;
+    final numWidgetsToKeep = space - 1;
+    final numWidgetsRemoved = holidayWidgets.length - numWidgetsToKeep;
     return [
-      ...widgets.take(numWidgetsToKeep),
-      _eventBox('+$numWidgetsRemoved more events', Colors.blue.shade200)
+      ...holidayWidgets.take(numWidgetsToKeep),
+      _eventBox(
+          '+$numWidgetsRemoved more events', Colors.blue.shade200, textStyle)
     ];
   }
 
@@ -118,7 +147,7 @@ class _JewishDayCell extends State<JewishDayCell> {
           foregroundDecoration: widget.isInCurrentMonth
               ? BoxDecoration(border: _getBorder())
               : BoxDecoration(color: Colors.white60, border: _getBorder()),
-          padding: const EdgeInsets.all(2.0),
+          padding: const EdgeInsets.all(padding),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
@@ -138,7 +167,7 @@ class _JewishDayCell extends State<JewishDayCell> {
               Expanded(
                   child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: _truncateWidgets(_getWidgets()),
+                children: _getWidgets(),
               )),
             ],
           ),
