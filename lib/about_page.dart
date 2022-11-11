@@ -66,13 +66,46 @@ class AboutPage extends StatelessWidget {
                       ]),
                 ),
                 const Text(
-                    "Please note: Dues to atmospheric conditions - all zmanim may be off by a minute or 2. Please do not rely on them till the last second."),
+                    "Please note: Due to atmospheric conditions - all zmanim may be off by a minute or 2. Please do not rely on them till the last second."),
                 const Text(
                   "Data Privacy",
                   style: TextStyle(height: 2, fontSize: 22),
                 ),
                 const Text(
                     "This app does not collect any data. Location and Calendar events are only used on this device."),
+                const Text(
+                  "Location data",
+                  style: TextStyle(height: 2, fontSize: 22),
+                ),
+                Text.rich(
+                  TextSpan(
+                      text:
+                          'The name of the nearest city is calculate on device using the list of cities downloaded from ',
+                      children: [
+                        TextSpan(
+                          text: 'GeoNames',
+                          style: const TextStyle(color: Colors.blue),
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () {
+                              launchUrl(Uri.parse('http://www.geonames.org/'),
+                                  mode: LaunchMode.externalApplication);
+                            },
+                        ),
+                        const TextSpan(text: ' licensed under the '),
+                        TextSpan(
+                          text:
+                              'Creative Commons Attribution 4.0 International (CC BY 4.0)',
+                          style: const TextStyle(color: Colors.blue),
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () {
+                              launchUrl(
+                                  Uri.parse(
+                                      'https://creativecommons.org/licenses/by/4.0/'),
+                                  mode: LaunchMode.externalApplication);
+                            },
+                        ),
+                      ]),
+                ),
                 TextButton(
                   onPressed: () => showLicensePage(context: context),
                   child: const Text('Licenses'),
