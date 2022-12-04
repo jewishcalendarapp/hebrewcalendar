@@ -5,17 +5,24 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:device_calendar/device_calendar.dart';
 import 'geolocation.dart';
 
+class _AccountCalendars {
+  final String accountName;
+  final List<_CalendarWithState> calendars;
+  _AccountCalendars(this.accountName, this.calendars);
+}
+
 class _CalendarWithState {
   final Calendar calendar;
   final bool visible;
   _CalendarWithState(this.calendar, this.visible);
+  String get accountName => calendar.accountName ?? 'No Account';
 }
 
 class _Settings {
   final bool disableLocation;
   final bool disableCalendar;
-  final List<_CalendarWithState> calendars;
-  _Settings(this.disableLocation, this.disableCalendar, this.calendars);
+  final List<_AccountCalendars> accountCalendars;
+  _Settings(this.disableLocation, this.disableCalendar, this.accountCalendars);
 }
 
 class SettingsPage extends StatefulWidget {
@@ -35,7 +42,17 @@ class _SettingsPage extends State<SettingsPage> {
     final disableCalendar = (await _prefs).getBool('disableCalendar') ?? false;
     final calendars =
         disableCalendar ? <_CalendarWithState>[] : await _getCalendars();
-    return _Settings(disableLocation, disableCalendar, calendars);
+    final calByAccount = <String, List<_CalendarWithState>>{};
+    for (final calendar in calendars) {
+      calByAccount
+          .putIfAbsent(calendar.accountName, () => <_CalendarWithState>[])
+          .add(calendar);
+    }
+    final orderedCals = calByAccount.entries
+        .map((e) => _AccountCalendars(e.key, e.value))
+        .toList();
+    orderedCals.sort((a, b) => a.accountName.compareTo(b.accountName));
+    return _Settings(disableLocation, disableCalendar, orderedCals);
   }
 
   Future<List<_CalendarWithState>> _getCalendars() async {
@@ -129,16 +146,26 @@ class _SettingsPage extends State<SettingsPage> {
                           title: const Text("Enable Calendars"),
                           onChanged: _toggleCalendars,
                         ),
-                        if (settings.calendars.isNotEmpty)
+                        if (settings.accountCalendars.isNotEmpty)
                           const ListTile(
                             title: Text('Calendars to show:'),
                           ),
-                        ...settings.calendars.map((cal) => CheckboxListTile(
-                              value: cal.visible,
-                              title:
-                                  Text(cal.calendar.name ?? "Unknown calendar"),
-                              onChanged: (e) => _updateCalHiddenState(cal, e),
-                            ))
+                        ...(settings.accountCalendars.map((acc) => [
+                              ListTile(
+                                contentPadding:
+                                    const EdgeInsets.fromLTRB(32, 0, 16, 0),
+                                title: Text(acc.accountName),
+                              ),
+                              ...acc.calendars.map((cal) => CheckboxListTile(
+                                    value: cal.visible,
+                                    contentPadding:
+                                        const EdgeInsets.fromLTRB(48, 0, 16, 0),
+                                    title: Text(cal.calendar.name ??
+                                        "Unknown calendar"),
+                                    onChanged: (e) =>
+                                        _updateCalHiddenState(cal, e),
+                                  ))
+                            ])).expand((element) => element)
                       ],
                     ));
                   })
