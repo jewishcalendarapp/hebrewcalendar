@@ -16,6 +16,11 @@ DateTime? _getTimeFromShaaZmanis(ZmanimCalendar zmanim, double hours) {
   return zmanim.getShaahZmanisBasedZman(sunrise, sunset, hours);
 }
 
+DateTime? getTzais6(ZmanimCalendar zmanim) {
+  const tzeis6Offset = ZmanimCalendar.ZENITH_8_POINT_5 - 2.5;
+  return zmanim.getSunsetOffsetByDegrees(tzeis6Offset);
+}
+
 enum ZmanType {
   alos19point9,
   sunrise,
@@ -71,9 +76,7 @@ Zman? _zmanTypeToZman(ZmanType type, JewishCalendar day, ZmanimCalendar zmanim,
       return null;
     case ZmanType.tzeis6:
       if (day.getDayOfWeek() == 7 || day.isYomTovAssurBemelacha()) return null;
-      const tzeis6Offset = ZmanimCalendar.ZENITH_8_POINT_5 - 2.5;
-      return Zman(_endText(day),
-          _roundUp(zmanim.getSunsetOffsetByDegrees(tzeis6Offset)), formatter);
+      return Zman(_endText(day), _roundUp(getTzais6(zmanim)), formatter);
     case ZmanType.tzeis8point5:
       if (day.getDayOfWeek() == 7 || day.isYomTovAssurBemelacha()) {
         return Zman(_endText(day), _roundUp(zmanim.getTzais()), formatter);

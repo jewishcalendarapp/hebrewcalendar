@@ -11,6 +11,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 const disableLocationKey = 'locationDisabled';
 
+enum GeolocationStatus {
+  fresh,
+  old,
+}
+
+class GeoLocationData {
+  final GeoLocation location;
+  final GeolocationStatus status;
+  GeoLocationData(this.location, this.status);
+}
+
 Future<void> getLocationPermission() async {
   final prefs = await SharedPreferences.getInstance();
   final isLocationDisabled = prefs.getBool(disableLocationKey) ?? false;
@@ -49,7 +60,7 @@ Future<void> getLocationPermission() async {
   }
 }
 
-Future<GeoLocation> determinePosition() async {
+Future<GeoLocationData> determinePosition() async {
   try {
     await getLocationPermission();
   } catch (e) {
@@ -60,12 +71,54 @@ Future<GeoLocation> determinePosition() async {
   // When we reach here, permissions are granted and we can
   // continue accessing the position of the device.
   final position = await Geolocator.getCurrentPosition();
-  final location = await _getDbResults(position.latitude, position.longitude);
-  final locationTitle = location != null
+  final geoLocation =
+      await _getGeoLocation(position.latitude, position.longitude);
+  await _saveLatestLocation(position.latitude, position.longitude);
+  return GeoLocationData(geoLocation, GeolocationStatus.fresh);
+}
+
+Future<GeoLocation> _getGeoLocation(double lat, double lon) async {
+  final locationTitle = await _getLocationTitle(lat, lon);
+  return GeoLocation.setLocation(locationTitle, lat, lon, DateTime.now());
+}
+
+Future<String> _getLocationTitle(double lat, double lon) async {
+  final location = await _getDbResults(lat, lon);
+  return location != null
       ? "${location.cityName}, ${location.adminName}"
-      : "Current Location - Lat: ${position.latitude.toStringAsFixed(4)}, Lon: ${position.longitude.toStringAsFixed(4)}";
-  return GeoLocation.setLocation(
-      locationTitle, position.latitude, position.longitude, DateTime.now());
+      : "Current Location - Lat: ${lat.toStringAsFixed(4)}, Lon: ${lon.toStringAsFixed(4)}";
+}
+
+Future<void> _saveLatestLocation(double lat, double lon) async {
+  final prefs = await SharedPreferences.getInstance();
+  prefs.setDouble("lastKnowLatitude", lat);
+  prefs.setDouble("lastKnowLongitude", lon);
+  prefs.setString("lastKnowLocationDate", DateTime.now().toIso8601String());
+}
+
+Future<void> clearLatestLocation() async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.remove("lastKnowLatitude");
+  await prefs.remove("lastKnowLongitude");
+  await prefs.remove("lastKnowLocationDate");
+}
+
+/// only to be used for widgets now. maybe later to use if location service is turned off.
+Future<GeoLocationData?> getLastKnownLocation() async {
+  final prefs = await SharedPreferences.getInstance();
+  final lat = prefs.getDouble("lastKnowLatitude");
+  final lon = prefs.getDouble("lastKnowLongitude");
+  final lastDate =
+      DateTime.tryParse(prefs.getString("lastKnowLocationDate") ?? '');
+  if (lat != null && lon != null && lastDate != null) {
+    final fivedaysago = DateTime.now().subtract(const Duration(days: 5));
+    if (lastDate.isAfter(fivedaysago)) {
+      // its less than 5 days old...
+      final geoLocation = await _getGeoLocation(lat, lon);
+      return GeoLocationData(geoLocation, GeolocationStatus.old);
+    }
+  }
+  return null;
 }
 
 Future<void> _copyDB(String path) async {

@@ -38,8 +38,9 @@ class _SettingsPage extends State<SettingsPage> {
   Result<UnmodifiableListView<Calendar>>? _calendars;
 
   Future<_Settings> _getSettings() async {
-    final disableLocation = (await _prefs).getBool(disableLocationKey) ?? false;
-    final disableCalendar = (await _prefs).getBool('disableCalendar') ?? false;
+    final prefs = await _prefs;
+    final disableLocation = prefs.getBool(disableLocationKey) ?? false;
+    final disableCalendar = prefs.getBool('disableCalendar') ?? false;
     final calendars =
         disableCalendar ? <_CalendarWithState>[] : await _getCalendars();
     final calByAccount = <String, List<_CalendarWithState>>{};

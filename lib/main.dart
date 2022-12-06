@@ -3,17 +3,28 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:hebrew_calendar/about_page.dart';
 import 'package:hebrew_calendar/settings.dart';
+import 'package:hebrew_calendar/widget_manager.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:kosher_dart/kosher_dart.dart';
 import 'package:month_year_picker/month_year_picker.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:workmanager/workmanager.dart';
 
 import 'heb_day.dart';
 import 'zmanim.dart';
 import 'geolocation.dart';
 import 'utils.dart';
 import 'local_events.dart';
+
+@pragma('vm:entry-point') // Mandatory if the App is using Flutter 3.1+
+void callbackDispatcher() {
+  Workmanager().executeTask((taskName, inputData) async {
+    await updateWidget(taskName != updateWidgetExactTimeTask);
+
+    return Future.value(true);
+  });
+}
 
 String _getMonthsTitle(DateTime day) {
   final firstJday =
@@ -39,6 +50,16 @@ String _getMonthsTitle(DateTime day) {
 }
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  updateWidget(true);
+  Workmanager().initialize(callbackDispatcher);
+  Workmanager().registerPeriodicTask(
+    simplePeriodicTask,
+    simplePeriodicTask,
+    frequency: const Duration(hours: 3),
+    initialDelay: const Duration(seconds: 10),
+    existingWorkPolicy: ExistingWorkPolicy.replace,
+  );
   runApp(const MyApp());
 }
 
@@ -96,8 +117,9 @@ class _MyHomePageState extends State<MyHomePage> {
     if (_cachedGeoLocation != null) return _cachedGeoLocation!;
     try {
       final location = await determinePosition();
-      _cachedGeoLocation = location;
-      return location;
+      _cachedGeoLocation = location.location;
+      updateWidget(true);
+      return location.location;
     } catch (e) {
       return Future.error(e);
     }
