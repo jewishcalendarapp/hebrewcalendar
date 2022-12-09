@@ -1,6 +1,8 @@
 import 'dart:math';
 
+import 'package:device_calendar/device_calendar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:hebrew_calendar/about_page.dart';
 import 'package:hebrew_calendar/settings.dart';
 import 'package:hebrew_calendar/widget_manager.dart';
@@ -9,6 +11,7 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:kosher_dart/kosher_dart.dart';
 import 'package:month_year_picker/month_year_picker.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:workmanager/workmanager.dart';
 
 import 'heb_day.dart';
@@ -60,6 +63,7 @@ void main() {
     initialDelay: const Duration(seconds: 10),
     existingWorkPolicy: ExistingWorkPolicy.replace,
   );
+  initializeTzData();
   runApp(const MyApp());
 }
 
@@ -153,6 +157,93 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  String _formatEventTime(EventsWithColor event) {
+    if (event.allDay) return 'Full Day Event';
+    if (event.start != null && event.end != null) {
+      final start =
+          '${event.startTimeFormatted} ${event.startLocal!.timeZoneName}';
+      final end = '${event.endTimeFormatted} ${event.endLocal!.timeZoneName}';
+      return '$start - $end';
+    }
+    return 'No Time Set';
+  }
+
+  String _getAttendeeName(Attendee a) {
+    final name = a.name ?? '';
+    if (name.isNotEmpty) return name;
+    return a.emailAddress ?? 'Unknown person';
+  }
+
+  ListTile _getAttendeeRow(Attendee a, {bool showLeadingWidget = false}) {
+    final statusIcon = _getAttendeeStatus(a);
+    final name = _getAttendeeName(a);
+    return ListTile(
+      leading: Icon(Icons.people,
+          color: showLeadingWidget ? null : Colors.transparent),
+      title: Text(name),
+      subtitle: a.isOrganiser ? const Text('Organizer') : null,
+      trailing: statusIcon,
+      visualDensity: VisualDensity.compact,
+    );
+  }
+
+  ExpansionTile _getAttendeesRow(List<Attendee> attendees) {
+    return ExpansionTile(
+      leading: const Icon(Icons.people),
+      title: Text('Attendees (${attendees.length})'),
+      children: attendees.map(_getAttendeeRow).toList(),
+    );
+  }
+
+  Icon? _getAttendeeStatus(Attendee a) {
+    switch (a.androidAttendeeDetails?.attendanceStatus) {
+      case AndroidAttendanceStatus.Accepted:
+        return const Icon(Icons.check, color: Colors.green);
+      case AndroidAttendanceStatus.Declined:
+        return const Icon(
+          Icons.not_interested,
+          color: Colors.red,
+        );
+      default:
+        return null;
+    }
+  }
+
+  SimpleDialog _createEventDialog(EventsWithColor event) {
+    const iconGap = EdgeInsets.only(left: 4.0);
+    return SimpleDialog(
+      title: Text(event.title),
+      contentPadding: const EdgeInsets.all(8),
+      children: [
+        ListTile(
+          leading: const Icon(Icons.access_time),
+          title: Text(_formatEventTime(event)),
+          visualDensity: VisualDensity.compact,
+        ),
+        if (event.location.isNotEmpty)
+          ListTile(
+            leading: const Icon(Icons.location_on_outlined),
+            title: Text(event.location),
+            visualDensity: VisualDensity.compact,
+          ),
+        if (event.attendees.length == 1)
+          _getAttendeeRow(event.attendees.single, showLeadingWidget: true),
+        if (event.attendees.length > 1) _getAttendeesRow(event.attendees),
+        if (event.description.isNotEmpty)
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            child: Linkify(
+              text: event.description,
+              onOpen: (link) async {
+                final url = Uri.parse(link.url);
+                await launchUrl(url, mode: LaunchMode.externalApplication);
+              },
+            ),
+          )
+      ],
+    );
+  }
+
   ExpansionPanel _buildZmanimPanel(AsyncSnapshot<GeoLocation> snapshot) {
     return ExpansionPanel(
       headerBuilder: (BuildContext context, bool isExpanded) {
@@ -208,14 +299,24 @@ class _MyHomePageState extends State<MyHomePage> {
       body: snapshot.hasData
           ? Column(
               children: events
-                  .map((e) => Container(
-                        margin: const EdgeInsets.all(4.0),
-                        padding: const EdgeInsets.all(4.0),
-                        color: e.color,
-                        child: Text(
-                          e.event.title ?? "unnamed event",
+                  .map(
+                    (e) => Container(
+                      margin: const EdgeInsets.all(4.0),
+                      child: InkWell(
+                        onTap: () => showDialog(
+                            context: context,
+                            builder: ((context) => _createEventDialog(e))),
+                        child: Ink(
+                          padding: const EdgeInsets.all(4.0),
+                          color: e.color,
+                          child: Text((e.showStartTime
+                                  ? '${e.startTimeFormatted}: '
+                                  : '') +
+                              e.title),
                         ),
-                      ))
+                      ),
+                    ),
+                  )
                   .toList(),
             )
           : Text('Error getting event data: ${snapshot.error}'),
