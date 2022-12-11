@@ -47,7 +47,9 @@ Future<DateTime?> _getTzeis(DateTime date) async {
 Future<void> updateWidget(bool setInstantUpdate) async {
   final now = DateTime.now();
   final jewishDate = JewishCalendar.fromDateTime(now);
-  final formatter = HebrewDateFormatter()..hebrewFormat = true;
+  final formatter = HebrewDateFormatter()
+    ..hebrewFormat = true
+    ..useGershGershayim = false;
   var tzeis = await _getTzeis(now);
 
   var switchTime = tzeis ??

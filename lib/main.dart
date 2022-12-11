@@ -391,10 +391,9 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Container _createCalendar(MonthEvents? events, double height, double width) {
-    const daysOfWeekHeight = 16.0;
+    const daysOfWeekHeight = 24.0;
     final weeksInMonth = getWeeksInMonth(_selectedDay);
     final rowHeight = min(74.0, (height - daysOfWeekHeight) / weeksInMonth);
-    // JewishCalendar.fromDateTime(_selectedDay).
     return Container(
       constraints: width > height
           ? BoxConstraints(

@@ -107,11 +107,7 @@ class _JewishDayCell extends State<JewishDayCell> {
           )),
       ..._truncatedHolidays(
           widget.events
-              .map((e) => _eventBox(
-                  (e.showStartTime ? '${e.startTimeFormatted}: ' : '') +
-                      e.title,
-                  e.color,
-                  widgetTextStyle))
+              .map((e) => _eventBox(e.title, e.color, widgetTextStyle))
               .toList(),
           numWidgetsToShow - holidayTexts.length,
           widgetTextStyle)
