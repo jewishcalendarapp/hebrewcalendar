@@ -152,5 +152,5 @@ int _sortEvents(EventsWithColor a, EventsWithColor b) {
   if (aStart == null && bStart == null) return 0;
   if (aStart == null) return 1;
   if (bStart == null) return -1;
-  return bStart.microsecondsSinceEpoch - aStart.microsecondsSinceEpoch;
+  return aStart.microsecondsSinceEpoch - bStart.microsecondsSinceEpoch;
 }
