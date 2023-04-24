@@ -25,6 +25,8 @@ enum ZmanType {
   alos19point9,
   sunrise,
   kriasShmaRav,
+  eatChometz,
+  burnChometz,
   chatzos,
   minchaGedola,
   earlyCandleLighting,
@@ -56,6 +58,20 @@ Zman? _zmanTypeToZman(ZmanType type, JewishCalendar day, ZmanimCalendar zmanim,
     case ZmanType.kriasShmaRav:
       return Zman(
           "Sof Zman Krias Shma", _getTimeFromShaaZmanis(zmanim, 3), formatter);
+    case ZmanType.eatChometz:
+      final isErevPesach = day.getJewishMonth() == JewishDate.NISSAN &&
+          day.getJewishDayOfMonth() == 14;
+      return isErevPesach
+          ? Zman("Eat Chometz Before", _getTimeFromShaaZmanis(zmanim, 4),
+              formatter)
+          : null;
+    case ZmanType.burnChometz:
+      final isErevPesach = day.getJewishMonth() == JewishDate.NISSAN &&
+          day.getJewishDayOfMonth() == 14;
+      return isErevPesach
+          ? Zman("Burn Chometz Before", _getTimeFromShaaZmanis(zmanim, 5),
+              formatter)
+          : null;
     case ZmanType.chatzos:
       return Zman("Chatzos", zmanim.getChatzos(), formatter);
     case ZmanType.minchaGedola:

@@ -73,6 +73,7 @@ class _JewishDayCell extends State<JewishDayCell> {
       ));
 
   List<Widget> _getWidgets() {
+    final dayOfOmer = formatter.formatOmer(widget.day);
     final holidayTexts = [
       if (widget.day.isYomTov() || widget.day.isTaanis())
         formatter.formatYomTov(widget.day),
@@ -81,6 +82,8 @@ class _JewishDayCell extends State<JewishDayCell> {
         formatter.formatParsha(widget.day),
       if (widget.day.getSpecialShabbos() != Parsha.NONE)
         formatter.formatSpecialParsha(widget.day),
+      // lag baomer is also a yom tov - so we don't want it listed twice
+      if (dayOfOmer.isNotEmpty && widget.day.getDayOfOmer() != 33) dayOfOmer,
     ];
     var widgetTextStyle = const TextStyle(fontSize: 7);
 

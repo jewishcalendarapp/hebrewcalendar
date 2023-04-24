@@ -8,6 +8,8 @@ final types = [
   ZmanType.alos19point9,
   ZmanType.sunrise,
   ZmanType.kriasShmaRav,
+  ZmanType.eatChometz,
+  ZmanType.burnChometz,
   ZmanType.chatzos,
   ZmanType.minchaGedola,
   ZmanType.earlyCandleLighting,
