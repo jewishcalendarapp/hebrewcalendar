@@ -210,7 +210,6 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   SimpleDialog _createEventDialog(EventsWithColor event) {
-    const iconGap = EdgeInsets.only(left: 4.0);
     return SimpleDialog(
       title: Text(event.title),
       contentPadding: const EdgeInsets.all(8),

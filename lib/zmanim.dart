@@ -51,7 +51,6 @@ class _ZmanimBox extends State<ZmanimBox> {
           Text("Timezone: $timeZoneName"),
           ...getZmanim(types, day, zmanim, timeFormatter)
               .map((e) => e.toWidget())
-              .toList()
         ],
       ),
     );
