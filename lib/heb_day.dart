@@ -140,7 +140,7 @@ class _JewishDayCell extends State<JewishDayCell> {
     return Theme(
         data: Theme.of(context).copyWith(
             primaryTextTheme:
-                const TextTheme(bodyText1: TextStyle(fontSize: 10))),
+                const TextTheme(bodyLarge: TextStyle(fontSize: 10))),
         child: Container(
           decoration: BoxDecoration(
             color: bgColor,

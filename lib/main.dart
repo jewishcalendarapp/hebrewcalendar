@@ -331,8 +331,8 @@ class _MyHomePageState extends State<MyHomePage> {
     return ExpansionPanelList(
       expansionCallback: (int index, bool isExpanded) {
         setState(() {
-          if (index == 0) _zmanimExpanded = !isExpanded;
-          if (index == 1) _eventsExpanded = !isExpanded;
+          if (index == 0) _zmanimExpanded = !_zmanimExpanded;
+          if (index == 1) _eventsExpanded = !_eventsExpanded;
         });
       },
       children: [
