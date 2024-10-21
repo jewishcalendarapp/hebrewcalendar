@@ -506,6 +506,8 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
         centerTitle: true,
         title: Text(_getMonthsTitle(_selectedDay)),
         titleTextStyle: const TextStyle(fontSize: 12),
