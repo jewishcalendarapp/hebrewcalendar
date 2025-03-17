@@ -133,7 +133,8 @@ String _sunsetText(JewishCalendar day) {
 
 bool _earlyCandleLighting(JewishCalendar day) {
   return day.hasCandleLighting() &&
-      (day.getDayOfWeek() == 6 || !day.isYomTovAssurBemelacha());
+      day.getDayOfWeek() != 7 &&
+      !day.isYomTovAssurBemelacha();
 }
 
 bool _lateCandleLighting(JewishCalendar day) {
