@@ -132,9 +132,11 @@ String _sunsetText(JewishCalendar day) {
 }
 
 bool _earlyCandleLighting(JewishCalendar day) {
+  bool isShabbosOrYomTov =
+      day.getDayOfWeek() == 7 || day.isYomTovAssurBemelacha();
   return day.hasCandleLighting() &&
-      day.getDayOfWeek() != 7 &&
-      !day.isYomTovAssurBemelacha();
+      (day.getDayOfWeek() == 6 || // friday is always early
+          !isShabbosOrYomTov); // shabbos and yomtov is always late (unless friday)
 }
 
 bool _lateCandleLighting(JewishCalendar day) {
