@@ -67,7 +67,8 @@ Zman? _zmanTypeToZman(ZmanType type, JewishCalendar day, ZmanimCalendar zmanim,
           : null;
     case ZmanType.burnChometz:
       final isErevPesach = day.getJewishMonth() == JewishDate.NISSAN &&
-          day.getJewishDayOfMonth() == 14;
+              (day.getJewishDayOfMonth() == 14 && day.getDayOfWeek() != 7) ||
+          (day.getJewishDayOfMonth() == 13 && day.getDayOfWeek() == 6);
       return isErevPesach
           ? Zman("Burn Chometz Before", _getTimeFromShaaZmanis(zmanim, 5),
               formatter)
