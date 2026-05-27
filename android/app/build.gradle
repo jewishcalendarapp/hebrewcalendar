@@ -1,6 +1,5 @@
 plugins {
     id "com.android.application"
-    id "kotlin-android"
     id "dev.flutter.flutter-gradle-plugin"
 }
 
@@ -31,7 +30,7 @@ if (keystorePropertiesFile.exists()) {
 
 
 android {
-    compileSdkVersion 34
+    compileSdkVersion 36
     ndkVersion flutter.ndkVersion
 
     compileOptions {
@@ -39,13 +38,10 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
-    kotlinOptions {
-        jvmTarget = '1.8'
-    }
-
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
     }
+    namespace "com.jewish_calendar.hebrew_calendar"
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
@@ -69,7 +65,7 @@ android {
    buildTypes {
        release {
            signingConfig signingConfigs.release
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
        }
        debug {
             applicationIdSuffix = ".debug"
@@ -77,11 +73,13 @@ android {
    }
 }
 
-flutter {
-    source '../..'
+
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8
+    }
 }
 
-dependencies {
-    implementation 'androidx.work:work-runtime:2.8.1'
-    implementation 'androidx.work:work-runtime-ktx:2.8.1'
+flutter {
+    source '../..'
 }

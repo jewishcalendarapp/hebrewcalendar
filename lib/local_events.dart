@@ -3,7 +3,7 @@ import 'package:device_calendar/device_calendar.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_native_timezone/flutter_native_timezone.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest.dart';
 
 import 'utils.dart';
@@ -18,7 +18,8 @@ void initializeTzData() async {
 
 Future<void> ensureLocalTzSet() async {
   if (_nativeTimeZone != null) return;
-  _nativeTimeZone = await FlutterNativeTimezone.getLocalTimezone();
+  final tz = await FlutterTimezone.getLocalTimezone();
+  _nativeTimeZone = tz.identifier;
   var localTz = getLocation(_nativeTimeZone!);
   setLocalLocation(localTz);
 }

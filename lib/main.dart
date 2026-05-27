@@ -61,7 +61,7 @@ void main() {
     simplePeriodicTask,
     frequency: const Duration(hours: 3),
     initialDelay: const Duration(seconds: 10),
-    existingWorkPolicy: ExistingWorkPolicy.replace,
+    existingWorkPolicy: ExistingPeriodicWorkPolicy.replace,
   );
   initializeTzData();
   runApp(const MyApp());

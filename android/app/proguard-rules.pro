@@ -1,1 +1,2 @@
 -keep class com.builttoroam.devicecalendar.** { *; }
+-keep public class * extends es.antonborri.home_widget.HomeWidgetProvider
