@@ -5,10 +5,12 @@
     android:id="@+id/widget_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_margin="8dp"
+    android:layout_margin="4dp"
     android:background="@drawable/widget_background"
     android:orientation="vertical"
-    android:padding="8dp">
+    android:gravity="center"
+    android:padding="8dp"
+    android:paddingTop="0dp">
 
     <TextView
         android:id="@+id/widget_title"
@@ -17,6 +19,8 @@
         android:gravity="center"
         android:textSize="36sp"
         android:textStyle="bold"
+        android:lineHeight="38sp"
+        android:maxHeight="38sp"
         tools:text="Title"
         tools:textAppearance="@style/TextAppearance.AppCompat.Display2" />
 
@@ -26,5 +30,7 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:textSize="18sp"
+        android:lineHeight="20sp"
+        android:maxHeight="20sp"
         tools:text="Message" />
 </LinearLayout>
