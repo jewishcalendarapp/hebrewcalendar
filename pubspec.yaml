@@ -17,7 +17,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.0+17
+version: 1.0.0+18
 
 environment:
   sdk: '>=2.18.2 <4.6.0'
@@ -40,6 +40,8 @@ dependencies:
   cupertino_icons: ^1.0.2
   table_calendar: ^3.2.0
   intl: ^0.20.0
+  # 2.0.20 requires modifying candleighting times for when friday is first day
+  # of YT. see https://github.com/yakir8/kosher_dart/pull/63
   kosher_dart: ^2.0.17
   geolocator: ^14.0.2
   path_provider: ^2.0.11
