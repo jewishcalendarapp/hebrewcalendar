@@ -148,6 +148,13 @@ class _MyHomePageState extends State<MyHomePage> {
       initialDate: _selectedDay,
       firstDate: DateTime(1900),
       lastDate: DateTime(2300),
+      builder: (context, child) {
+        return MediaQuery(
+          data: MediaQuery.of(context)
+              .copyWith(textScaler: TextScaler.linear(0.9)),
+          child: child!,
+        );
+      },
     );
     if (!mounted) return;
     if (selectedDate != null) {
